@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>ConvertAllToMp3</id>
+    <version>$version$</version>
+    <authors>Pieter van Ginkel</authors>
+    <description>Convert all WAV files in a directory to MP3 using the LAME MP3 encoder.</description>
+    <projectUrl>http://github.com/pvginkel/ConvertAllToMp3</projectUrl>
+  </metadata>
+  <files>
+    <file src="..\ConvertAllToMp3\bin\Release\**" target="Tools" exclude="..\ConvertAllToMp3\bin\Release\**.pdb;..\ConvertAllToMp3\bin\Release\**.xml" />
+    <file src="..\ConvertAllToMp3\NguScript.xml" target="Tools" />
+    <file src="..\packages\NuGetUpdate.*\Tools\Installer\ngu.exe" target="Tools" />
+  </files>
+</package>

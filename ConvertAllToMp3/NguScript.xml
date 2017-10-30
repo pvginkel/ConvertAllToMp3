@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Script xmlns="https://github.com/pvginkel/NuGetUpdate/Script/v1">
+
+  <Setup>
+
+    <Assign Variable="TargetPath">ExpandPath("%LOCAL_APPDATA%\\Convert All to MP3")</Assign>
+    <Assign Variable="StartMenuPath">Config.SetupTitle</Assign>
+
+    <Function Name="PrepareVariables">
+      <Assign Variable="PrimaryPath">TargetPath + "\\Bin\\ConvertAllToMp3.exe"</Assign>
+      <Assign Variable="ShortCutName">Config.SetupTitle + ".lnk"</Assign>
+    </Function>
+
+    <Function Name="StartConvertAllToMP3">
+      <ExecShell
+        FileName="PrimaryPath"
+        Arguments="Config.RestartArguments"/>
+    </Function>
+
+  </Setup>
+
+  <Install>
+
+    <Page.Install.DestinationFolder />
+
+    <Page.Install.StartMenu CreateOnDesktopVisible="true" IsLast="true" />
+
+    <Page.Install.Progress>
+
+      <InstallPackage />
+
+      <Call Name="PrepareVariables" />
+
+      <If Condition="CreateShortcuts">
+        <Then>
+          <CreateShortcut
+            ShortcutFileName="ExpandPath(&quot;%STARTMENU%\\&quot; + StartMenuPath + &quot;\\&quot; + ShortCutName)"
+            TargetFileName="PrimaryPath" />
+        </Then>
+      </If>
+      <If Condition="CreateDesktopShortcuts">
+        <Then>
+          <CreateShortcut
+            ShortcutFileName="ExpandPath(&quot;%DESKTOP%\\&quot; + ShortCutName)"
+            TargetFileName="PrimaryPath" />
+        </Then>
+      </If>
+
+    </Page.Install.Progress>
+
+    <Page.Install.Finish>
+      <Control.CheckBox Text="Run {{Config.SetupTitle}}">
+        <Call Name="StartConvertAllToMP3" />
+      </Control.CheckBox>
+    </Page.Install.Finish>
+
+  </Install>
+
+  <Update>
+
+    <Page.Update.Progress>
+
+      <Call Name="PrepareVariables" />
+
+      <InstallPackage />
+
+    </Page.Update.Progress>
+
+    <Page.Update.Finish>
+      <Control.CheckBox Text="Run {{Config.SetupTitle}}">
+        <Call Name="StartConvertAllToMP3" />
+      </Control.CheckBox>
+    </Page.Update.Finish>
+
+  </Update>
+
+  <Uninstall>
+
+    <Page.Uninstall.Progress>
+
+      <UninstallPackage />
+
+    </Page.Uninstall.Progress>
+
+    <Page.Uninstall.Finish />
+
+  </Uninstall>
+
+</Script>

@@ -41,6 +41,9 @@
     <Reference Include="NAudio.Lame, Version=1.0.5.27653, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NAudio.Lame.1.0.6\lib\net20\NAudio.Lame.dll</HintPath>
     </Reference>
+    <Reference Include="NuGetUpdate, Version=0.2.6.0, Culture=neutral, PublicKeyToken=059e64dabad2dc3e, processorArchitecture=MSIL">
+      <HintPath>..\packages\NuGetUpdate.0.2.6.0\lib\Net20\NuGetUpdate.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />

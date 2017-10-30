@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,7 +13,7 @@ namespace ConvertAllToMp3
 {
     public class Converter
     {
-        private List<string> _fileNames;
+        private readonly List<string> _fileNames;
         private int _threadCount;
         private readonly object _syncRoot = new object();
 
@@ -21,6 +22,9 @@ namespace ConvertAllToMp3
 
         public Converter(IEnumerable<string> fileNames)
         {
+            if (fileNames == null)
+                throw new ArgumentNullException(nameof(fileNames));
+
             _fileNames = new List<string>(fileNames);
 #if DEBUG
             _threadCount = 1;
@@ -65,6 +69,8 @@ namespace ConvertAllToMp3
                 try
                 {
                     DoConvert(fileName);
+
+                    OnProgress(new ConvertProgressEventArgs(fileName, 1, true, null));
                 }
                 catch (Exception ex)
                 {
@@ -81,25 +87,11 @@ namespace ConvertAllToMp3
             using (var writer = new LameMP3FileWriter(target, reader.WaveFormat, LAMEPreset.V2))
             {
                 long length = reader.Length;
-                long totalRead = 0;
-                var buffer = new byte[8192];
-                int read;
+                writer.OnProgress += (sender, inputBytes, outputBytes, finished) =>
+                    OnProgress(new ConvertProgressEventArgs(fileName, (float)inputBytes / length, false, null));
 
-                while ((read = reader.Read(buffer, 0, buffer.Length)) > 0)
-                {
-                    writer.Write(buffer, 0, read);
-
-                    totalRead += read;
-
-                    float progress = (float)totalRead / length;
-
-                    OnProgress(new ConvertProgressEventArgs(fileName, progress, false, null));
-                }
+                reader.CopyTo(writer);
             }
-
-            File.Delete(fileName);
-
-            OnProgress(new ConvertProgressEventArgs(fileName, 1, true, null));
         }
 
         protected virtual void OnDone()
@@ -118,14 +110,14 @@ namespace ConvertAllToMp3
         public string FileName { get; }
         public float Progress { get; }
         public bool Done { get; }
-        public Exception Excetion { get; }
+        public Exception Exception { get; }
 
-        public ConvertProgressEventArgs(string fileName, float progress, bool done, Exception excetion)
+        public ConvertProgressEventArgs(string fileName, float progress, bool done, Exception exception)
         {
             FileName = fileName;
             Progress = progress;
             Done = done;
-            Excetion = excetion;
+            Exception = exception;
         }
     }
 

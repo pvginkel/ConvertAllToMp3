@@ -13,7 +13,14 @@ namespace ConvertAllToMp3
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm(args));
+
+            Form mainForm;
+            if (args.Length == 0)
+                mainForm = new CreateShortcutForm();
+            else
+                mainForm = new MainForm(args);
+
+            Application.Run(mainForm);
         }
     }
 }

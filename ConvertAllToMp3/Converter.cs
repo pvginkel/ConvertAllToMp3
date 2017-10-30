@@ -13,6 +13,7 @@ namespace ConvertAllToMp3
 {
     public class Converter
     {
+        private readonly LAMEPreset _quality;
         private readonly List<string> _fileNames;
         private int _threadCount;
         private readonly object _syncRoot = new object();
@@ -20,10 +21,11 @@ namespace ConvertAllToMp3
         public event EventHandler Done;
         public event ConvertProgressEventHandler Progress;
 
-        public Converter(IEnumerable<string> fileNames)
+        public Converter(IEnumerable<string> fileNames, LAMEPreset quality)
         {
             if (fileNames == null)
                 throw new ArgumentNullException(nameof(fileNames));
+            _quality = quality;
 
             _fileNames = new List<string>(fileNames);
 #if DEBUG
@@ -84,7 +86,7 @@ namespace ConvertAllToMp3
             string target = Path.ChangeExtension(fileName, ".mp3");
 
             using (var reader = new AudioFileReader(fileName))
-            using (var writer = new LameMP3FileWriter(target, reader.WaveFormat, LAMEPreset.V2))
+            using (var writer = new LameMP3FileWriter(target, reader.WaveFormat, _quality))
             {
                 long length = reader.Length;
                 writer.OnProgress += (sender, inputBytes, outputBytes, finished) =>

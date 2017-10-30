@@ -28,11 +28,12 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.formFlowFooter1 = new SystemEx.Windows.Forms.FormFlowFooter();
+            this._cancelButton = new System.Windows.Forms.Button();
             this.panel1 = new System.Windows.Forms.Panel();
             this.panel2 = new System.Windows.Forms.Panel();
             this._filesPanel = new System.Windows.Forms.Panel();
-            this._cancelButton = new System.Windows.Forms.Button();
             this.formFlowFooter1.SuspendLayout();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -45,6 +46,17 @@
             this.formFlowFooter1.Name = "formFlowFooter1";
             this.formFlowFooter1.Size = new System.Drawing.Size(512, 45);
             this.formFlowFooter1.TabIndex = 0;
+            // 
+            // _cancelButton
+            // 
+            this._cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this._cancelButton.Location = new System.Drawing.Point(416, 11);
+            this._cancelButton.Name = "_cancelButton";
+            this._cancelButton.Size = new System.Drawing.Size(75, 23);
+            this._cancelButton.TabIndex = 0;
+            this._cancelButton.Text = "Cancel";
+            this._cancelButton.UseVisualStyleBackColor = true;
+            this._cancelButton.Click += new System.EventHandler(this._cancelButton_Click);
             // 
             // panel1
             // 
@@ -77,17 +89,6 @@
             this._filesPanel.Size = new System.Drawing.Size(486, 228);
             this._filesPanel.TabIndex = 0;
             // 
-            // _cancelButton
-            // 
-            this._cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this._cancelButton.Location = new System.Drawing.Point(416, 11);
-            this._cancelButton.Name = "_cancelButton";
-            this._cancelButton.Size = new System.Drawing.Size(75, 23);
-            this._cancelButton.TabIndex = 0;
-            this._cancelButton.Text = "Cancel";
-            this._cancelButton.UseVisualStyleBackColor = true;
-            this._cancelButton.Click += new System.EventHandler(this._cancelButton_Click);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -96,6 +97,7 @@
             this.ClientSize = new System.Drawing.Size(512, 299);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.formFlowFooter1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "MainForm";
             this.Text = "Convert All to MP3";

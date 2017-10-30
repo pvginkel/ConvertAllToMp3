@@ -8,6 +8,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using SystemEx.Windows.Forms;
+using SearchOption = System.IO.SearchOption;
 
 namespace ConvertAllToMp3
 {
@@ -29,7 +31,7 @@ namespace ConvertAllToMp3
         {
             if (_args.Length != 1)
             {
-                MessageBox.Show(this, "No path provided on the command line.", Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                TaskDialogEx.Error(this, "No path provided on the command line.");
                 Dispose();
                 return;
             }
@@ -47,7 +49,7 @@ namespace ConvertAllToMp3
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(this, "Could not load configuration file:" + Environment.NewLine + Environment.NewLine + ex.Message, Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    TaskDialogEx.Error(this, "Could not load configuration file.", ex.Message);
                     Dispose();
                     return;
                 }
@@ -82,14 +84,14 @@ namespace ConvertAllToMp3
 
             if (files.Count == 0)
             {
-                MessageBox.Show(this, "Found no files to convert.", Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                TaskDialogEx.Error(this, "Found no files to convert.", icon: TaskDialogIcon.Information);
                 Dispose();
                 return;
             }
 
             var controls = QueueFiles(files);
 
-            var result = MessageBox.Show(this, $"Found {files.Count} to convert. Do you want to start the conversion?", Text, MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+            var result = TaskDialogEx.Confirm(this, $"Found {files.Count} to convert. Do you want to start the conversion?", icon: TaskDialogIcon.Information);
             if (result != DialogResult.Yes)
             {
                 Dispose();
@@ -127,17 +129,72 @@ namespace ConvertAllToMp3
         {
             var converter = new Converter(fileNames);
 
-            converter.Done += (s, e) => BeginInvoke(new Action(Dispose));
-            converter.Progress += (s, e) => SetProgress(controls, e);
+            var converted = new List<string>();
+
+            converter.Done += (s, e) => ConversionCompleted(converted);
+            converter.Progress += (s, e) => SetProgress(controls, converted, e);
         }
 
-        private void SetProgress(Dictionary<string, FileControl> controls, ConvertProgressEventArgs e)
+        private void ConversionCompleted(List<string> converted)
         {
             if (InvokeRequired)
             {
-                BeginInvoke(new Action(() => SetProgress(controls, e)));
+                BeginInvoke(new Action(() => ConversionCompleted(converted)));
                 return;
             }
+
+            if (converted.Count > 0)
+            {
+                var taskDialog = TaskDialogEx.CreateDialog("Do you want to deleted the converted audio files?", $"{converted.Count} files were converted successfully.", TaskDialogIcon.Information);
+
+                taskDialog.CommonButtons = TaskDialogCommonButtons.Cancel;
+                taskDialog.AllowDialogCancellation = true;
+                taskDialog.Buttons = new[]
+                {
+                    new TaskDialogButton
+                    {
+                        ButtonText = "Delete to Recycle Bin",
+                        ButtonId = 1
+                    },
+                    new TaskDialogButton
+                    {
+                        ButtonText = "Delete Permanently",
+                        ButtonId = 2
+                    }
+                };
+                taskDialog.UseCommandLinks = true;
+
+                var result = taskDialog.Show(this);
+
+                switch (result)
+                {
+                    case 1:
+                        DeleteConverted(converted, true);
+                        break;
+                    case 2:
+                        DeleteConverted(converted, false);
+                        break;
+                }
+            }
+
+            Dispose();
+        }
+
+        private void DeleteConverted(List<string> converted, bool allowUndo)
+        {
+            ShellFileOperation.Delete(this, converted, allowUndo, false, true);
+        }
+
+        private void SetProgress(Dictionary<string, FileControl> controls, List<string> converted, ConvertProgressEventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action(() => SetProgress(controls, converted, e)));
+                return;
+            }
+
+            if (e.Done && e.Exception == null)
+                converted.Add(e.FileName);
 
             var control = controls[e.FileName];
 
@@ -156,7 +213,7 @@ namespace ConvertAllToMp3
         {
             if (e.CloseReason == CloseReason.UserClosing)
             {
-                var result = MessageBox.Show(this, "Are you sure you want to cancel conversion?", Text, MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                var result = TaskDialogEx.Confirm(this, "Are you sure you want to cancel conversion?");
                 if (result != DialogResult.Yes)
                     e.Cancel = true;
             }

@@ -286,45 +286,6 @@ Function AssemblyInfo-Write([string]$Project, [string]$ClsCompliant, [string]$Te
 }
 
 ################################################################################
-# ILMERGE
-################################################################################
-
-Function ILMerge([string]$Primary, [string]$Source, [string]$Target)
-{
-    Write-Host ("Merging " + $Primary)
-
-    $ILMerge = $Global:Root + "\Libraries\ILMerge\ILMerge.exe"
-    
-    $Libraries = $Null
-    
-    foreach ($File in (Get-ChildItem ($Source + "\*.dll")))
-    {
-        if ($Libraries -ne $Null)
-        {
-            $Libraries += " "
-        }
-        
-        $Libraries += $File.Name
-    }
-    
-    $Arguments = `
-        "`"/out:" + $Target + "\" + $Primary + "`" " + `
-        "`"/keyfile=" + $Global:Root + "\Support\Key.snk`" " + `
-        "/v2 /ndebug " + `
-        $Primary + " " + `
-        $Libraries
-    
-    Start-Process `
-        -NoNewWindow -Wait `
-        -FilePath $ILMerge `
-        -ArgumentList $Arguments `
-        -WorkingDirectory $Source `
-        -PassThru | Out-Null
-    
-    Console-Update-Status "[OK]" -ForegroundColor Green
-}
-
-################################################################################
 # NUGET PACKAGES
 ################################################################################
 
@@ -366,49 +327,37 @@ Function Build-NuGet-Package([string]$NuSpec, [string]$Package, [string]$TargetP
 # CREATE BOOTSTRAPPER
 ################################################################################
 
-Function Get-MakeSetup-Path
-{
-    $Path = $Null
-
-    foreach ($Item in (Get-ChildItem -Path ($Global:Root + "\packages\NuGetUpdate.*\Tools\Bootstrapper\MakeSetup.ps1")))
-    {
-        if ($Path -eq $Null)
-        {
-            $Path = $Item.FullName
-        }
-        else
-        {
-            Write-Host "Found multiple NuGetUpdate paths"
-            Exit 4
-        }
-    }
-    
-    if ($Path -eq $Null)
-    {
-        Write-Host "Could not find NuGetUpdate path"
-        exit 4
-    }
-    
-    return $Path
-}
-
 Function Create-Setup
 {
     Write-Host "Creating setup"
 
     $Target = $Global:Distrib
     
-    $Arguments = "`"" + $Target + "\Convert All to MP3 Setup.exe`" http://nuget.org/api/v2 ConvertAllToMp3 `"Convert All to MP3`""
+    $Header = $Global:Root + "\Build\Support\ngubs.sfx"
+    $Archive = $Global:Root + "\Build\Support\ngubs.7z"
     
-    $MakeSetup = Get-MakeSetup-Path
-
-    Start-Process `
-        -NoNewWindow `
-        -Wait `
-        -FilePath ($PSHome + "\powershell.exe") `
-        -ArgumentList ("-file `"" + ($MakeSetup) + "`" " + $Arguments) `
-        -WorkingDirectory ([System.IO.Path]::GetDirectoryName($MakeSetup)) `
-        -PassThru | Out-Null
+    $Config = @"
+;!@Install@!UTF-8!
+Title="Convert All to MP3"
+RunProgram="ngubs.exe -s http://nuget.org/api/v2 -p ConvertAllToMp3 -t \"Convert All to MP3\""
+Progress="no"
+;!@InstallEnd@!
+"@
+    
+    $Output = [System.IO.File]::Create($Target + "\Convert All to MP3 Setup.exe")
+    
+    $Input = [System.IO.File]::OpenRead($Header)
+    $Input.CopyTo($Output)
+    $Input.Dispose()
+    
+    $ConfigBytes = [System.Text.Encoding]::UTF8.GetBytes($Config)
+    $Output.Write($ConfigBytes, 0, $ConfigBytes.Length)
+    
+    $Input = [System.IO.File]::OpenRead($Archive)
+    $Input.CopyTo($Output)
+    $Input.Dispose()
+    
+    $Output.Dispose()
         
     Console-Update-Status "[OK]" -ForegroundColor Green
 }
